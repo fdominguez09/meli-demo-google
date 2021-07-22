@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -27,14 +28,25 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 @RestController
 public class AudienceJobController {
     @GetMapping("/demo")
     public String demo() throws Exception{
         GoogleAdsClient googleAdsClient = null;
-        try {
-            googleAdsClient = GoogleAdsClient.newBuilder().fromPropertiesFile().build();
+        try (InputStream input = AudienceJobController.class.getClassLoader().getResourceAsStream("ads.properties")) {
+            Properties prop = new Properties();
+
+            if (input == null) {
+                System.out.println("Sorry, unable to find config.properties");
+                return "Missing ads.properties file";
+            }
+
+            //load a properties file from class path
+            prop.load(input);
+
+            googleAdsClient = GoogleAdsClient.newBuilder().fromProperties(prop).build();
         } catch (FileNotFoundException fnfe) {
             System.err.printf(
                     "Failed to load GoogleAdsClient configuration from file. Exception: %s%n", fnfe);
